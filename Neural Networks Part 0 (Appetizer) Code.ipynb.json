@@ -1,0 +1,395 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "WARNING:tensorflow:From <ipython-input-1-c388e7809045>:8: read_data_sets (from tensorflow.contrib.learn.python.learn.datasets.mnist) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please use alternatives such as official/mnist/dataset.py from tensorflow/models.\n",
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/contrib/learn/python/learn/datasets/mnist.py:260: maybe_download (from tensorflow.contrib.learn.python.learn.datasets.base) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please write your own downloading logic.\n",
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/contrib/learn/python/learn/datasets/mnist.py:262: extract_images (from tensorflow.contrib.learn.python.learn.datasets.mnist) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please use tf.data to implement this functionality.\n",
+      "Extracting MNIST_data/train-images-idx3-ubyte.gz\n",
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/contrib/learn/python/learn/datasets/mnist.py:267: extract_labels (from tensorflow.contrib.learn.python.learn.datasets.mnist) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please use tf.data to implement this functionality.\n",
+      "Extracting MNIST_data/train-labels-idx1-ubyte.gz\n",
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/contrib/learn/python/learn/datasets/mnist.py:110: dense_to_one_hot (from tensorflow.contrib.learn.python.learn.datasets.mnist) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please use tf.one_hot on tensors.\n",
+      "Extracting MNIST_data/t10k-images-idx3-ubyte.gz\n",
+      "Extracting MNIST_data/t10k-labels-idx1-ubyte.gz\n",
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/contrib/learn/python/learn/datasets/mnist.py:290: DataSet.__init__ (from tensorflow.contrib.learn.python.learn.datasets.mnist) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Please use alternatives such as official/mnist/dataset.py from tensorflow/models.\n",
+      "55000\n",
+      "5000\n",
+      "10000\n"
+     ]
+    }
+   ],
+   "source": [
+    "################################\n",
+    "## Getting started & Data Set ##\n",
+    "################################\n",
+    "\n",
+    "import tensorflow as tf\n",
+    "\n",
+    "from tensorflow.examples.tutorials.mnist import input_data\n",
+    "mnist = input_data.read_data_sets(\"MNIST_data/\", one_hot=True)\n",
+    "#one_hot=TRUE: Conduct one-hot-encoding, i.e. the digit \"1\" [integer encoding] \n",
+    "#              will be represented as (0,1,0,0,0,0,0,0,0,0).\n",
+    "#              28x28 pixels are flattened into a 784 vector\n",
+    "#              Grayscale of each pixel between 0 and 255 (black 255)\n",
+    "\n",
+    "print(mnist.train.num_examples) # #55 000 train data\n",
+    "print(mnist.validation.num_examples) # #5000 validation data\n",
+    "print(mnist.test.num_examples) # #10 000 test data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "3\n"
+     ]
+    }
+   ],
+   "source": [
+    "##################################\n",
+    "## How does the data look like? ##\n",
+    "##################################\n",
+    "\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "i=1\n",
+    "\n",
+    "dig = np.argmax(mnist.train.labels[i,:])\n",
+    "#argmax due to one-hot encoding.\n",
+    "#compare to using:\n",
+    "#dig = mnist.train.labels[i,:]\n",
+    "\n",
+    "img = np.reshape(mnist.train.images[i,:], [28,28])\n",
+    "plt.imshow(img, cmap='Greys')\n",
+    "plt.show()\n",
+    "print(dig)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "####################\n",
+    "## Architecture I ##\n",
+    "####################\n",
+    "\n",
+    "## Single Layer NN\n",
+    "n_input = 784  # input layer (28x28 pixels)\n",
+    "n_output = 10  # output layer (0-9 digits)\n",
+    "\n",
+    "#Define 3 tensors as placeholders (tensors that we'll feed with values later)\n",
+    "\n",
+    "X = tf.placeholder(\"float\", [None, n_input])   #None x 784\n",
+    "Y = tf.placeholder(\"float\", [None, n_output])  #None x 10"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "#####################\n",
+    "## Hyperparameters ##\n",
+    "#####################\n",
+    "\n",
+    "learning_rate = 1e-4\n",
+    "n_iterations = 1000\n",
+    "batch_size = 128"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "WARNING:tensorflow:From /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/tensorflow/python/framework/op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "Colocations handled automatically by placer.\n"
+     ]
+    }
+   ],
+   "source": [
+    "#######################################\n",
+    "## Architecture II & Getting Started ##\n",
+    "#######################################\n",
+    "\n",
+    "# Initial values for Weights and Bias\n",
+    "\n",
+    "weights = {\n",
+    "    'w1': tf.Variable(tf.truncated_normal(shape = [n_input, n_output], stddev=0.1)), \n",
+    "}\n",
+    "\n",
+    "#weights are variables since they will be updated\n",
+    "\n",
+    "biases = {\n",
+    "    'b1': tf.Variable(tf.constant(0.1, shape = [n_output])),\n",
+    "}\n",
+    "\n",
+    "\n",
+    "layer = tf.add(tf.matmul(X, weights['w1']) , biases['b1']) #using the identity.\n",
+    "                                                           #Layer 1, 784+1 Neurons\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "WARNING:tensorflow:From <ipython-input-9-2ac9569e9397>:7: softmax_cross_entropy_with_logits (from tensorflow.python.ops.nn_ops) is deprecated and will be removed in a future version.\n",
+      "Instructions for updating:\n",
+      "\n",
+      "Future major versions of TensorFlow will allow gradients to flow\n",
+      "into the labels input on backprop by default.\n",
+      "\n",
+      "See `tf.nn.softmax_cross_entropy_with_logits_v2`.\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "####################################\n",
+    "## Loss Function and Optimization ##\n",
+    "####################################\n",
+    "\n",
+    "cross_entropy = tf.reduce_mean(   \n",
+    "    tf.nn.softmax_cross_entropy_with_logits(  #use cross_entropy norm\n",
+    "        labels=Y, logits = layer\n",
+    "        ))\n",
+    "train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)\n",
+    "                      #use the Adam Gradient Descent Optimizer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "slideshow": {
+     "slide_type": "slide"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "#####################\n",
+    "## Define Accuracy ##\n",
+    "#####################\n",
+    "\n",
+    "correct_pred = tf.equal(tf.argmax(layer, 1), tf.argmax(Y, 1))\n",
+    "accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Iteration 0 \t Loss = 2.4261804 \t Minibatch-Accuracy = 0.1875\n",
+      "Iteration 100 \t Loss = 2.1420097 \t Minibatch-Accuracy = 0.25\n",
+      "Iteration 200 \t Loss = 1.8631606 \t Minibatch-Accuracy = 0.3515625\n",
+      "Iteration 300 \t Loss = 1.6397359 \t Minibatch-Accuracy = 0.4765625\n",
+      "Iteration 400 \t Loss = 1.5157547 \t Minibatch-Accuracy = 0.5078125\n",
+      "Iteration 500 \t Loss = 1.3239673 \t Minibatch-Accuracy = 0.65625\n",
+      "Iteration 600 \t Loss = 1.1194171 \t Minibatch-Accuracy = 0.7578125\n",
+      "Iteration 700 \t Loss = 1.066611 \t Minibatch-Accuracy = 0.7421875\n",
+      "Iteration 800 \t Loss = 0.82550186 \t Minibatch-Accuracy = 0.8515625\n",
+      "Iteration 900 \t Loss = 0.9214972 \t Minibatch-Accuracy = 0.7734375\n"
+     ]
+    }
+   ],
+   "source": [
+    "################\n",
+    "## Run the NN ##\n",
+    "################\n",
+    "\n",
+    "init = tf.global_variables_initializer()\n",
+    "sess = tf.Session()\n",
+    "sess.run(init)\n",
+    "\n",
+    "for i in range(n_iterations):\n",
+    "    batch_x, batch_y = mnist.train.next_batch(batch_size)\n",
+    "    sess.run(train_step, feed_dict={\n",
+    "        X: batch_x, Y: batch_y\n",
+    "        })\n",
+    "\n",
+    "    # print loss and accuracy (per minibatch)\n",
+    "    if i % 100 == 0:\n",
+    "        minibatch_loss, minibatch_accuracy = sess.run(\n",
+    "            [cross_entropy, accuracy],\n",
+    "            feed_dict={X: batch_x, Y: batch_y}\n",
+    "            )\n",
+    "        print(\n",
+    "            \"Iteration\",\n",
+    "            str(i),\n",
+    "            \"\\t Loss =\",\n",
+    "            str(minibatch_loss),\n",
+    "            \"\\t Minibatch-Accuracy =\",\n",
+    "            str(minibatch_accuracy)\n",
+    "            )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "Accuracy on test data: 0.8108\n"
+     ]
+    }
+   ],
+   "source": [
+    "###########################\n",
+    "## Accuracy on test data ##\n",
+    "###########################\n",
+    "\n",
+    "test_accuracy = sess.run(accuracy, feed_dict={X: mnist.test.images, Y: mnist.test.labels})\n",
+    "print(\"\\nAccuracy on test data:\", test_accuracy)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Prediction: 9\n"
+     ]
+    }
+   ],
+   "source": [
+    "#######################################\n",
+    "## Checking the performance manually ##\n",
+    "#######################################\n",
+    "\n",
+    "test_digit = 24\n",
+    "\n",
+    "img = np.reshape(mnist.test.images[test_digit,:], [28,28])\n",
+    "plt.imshow(img, cmap='Greys')\n",
+    "plt.show()\n",
+    "\n",
+    "#dig = np.argmax(mnist.test.labels[test_digit,:])\n",
+    "#print(dig)\n",
+    "\n",
+    "prediction = sess.run(tf.argmax(layer, 1), feed_dict={X: mnist.test.images})\n",
+    "print (\"Prediction:\", np.squeeze(prediction)[test_digit])"
+   ]
+  }
+ ],
+ "metadata": {
+  "celltoolbar": "Slideshow",
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
